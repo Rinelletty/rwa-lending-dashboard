@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RWA Lending Risk Agent</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">RWA DeFi Lending POC</p>
+      <h1>RWA Lending Risk Agent</h1>
+      <p class="subtitle">監控真實世界資產抵押、Oracle 價格、鏈上流動性與借貸行為，產出可追溯的授信覆審與清算預警報告。</p>
+    </div>
+    <div class="top-actions" aria-label="主要操作">
+      <button id="loadStable" type="button">載入穩定池樣本</button>
+      <button id="loadStress" type="button">載入壓力池樣本</button>
+      <button id="runReview" class="primary" type="button">執行風險掃描</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel input-panel" aria-label="RWA 資料輸入">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Step 1</p>
+          <h2>RWA 報告與鏈上資料</h2>
+        </div>
+        <span id="parseStatus" class="status-pill">等待資料</span>
+      </div>
+
+      <label class="field-label" for="poolName">借貸池名稱</label>
+      <input id="poolName" type="text" value="Asia Invoice RWA Vault">
+
+      <label class="field-label" for="assetType">抵押資產類型</label>
+      <select id="assetType">
+        <option>應收帳款代幣</option>
+        <option>房產代幣化代幣</option>
+        <option>國債代幣</option>
+        <option>碳權與能源收益權</option>
+      </select>
+
+      <div class="file-drop">
+        <input id="fileInput" type="file" accept=".json,.csv,.txt">
+        <div>
+          <strong>上傳 JSON / CSV / TXT 風險資料</strong>
+          <span>PoC 模擬解析審計報告摘要與鏈上快照；產品化可接 PDF RAG、Web3.py 與 Oracle API。</span>
+        </div>
+      </div>
+
+      <label class="field-label" for="rwaInput">鏈上與鏈下風險快照</label>
+      <textarea id="rwaInput" spellcheck="false"></textarea>
+
+      <div class="hint-row">
+        <span>必要欄位：日期、抵押估值、借款餘額、清算門檻、Oracle價格、評估價格、流動性深度、30日違約率、巨鯨提領、審計分數、智能合約風險</span>
+      </div>
+    </section>
+
+    <section class="panel agent-panel" aria-label="AI Agent 流程">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Step 2</p>
+          <h2>多 Agent 任務編排</h2>
+        </div>
+        <span id="agentStatus" class="status-pill">待執行</span>
+      </div>
+
+      <ol class="agent-steps">
+        <li data-step="fetch">
+          <span>1</span>
+          <div>
+            <strong>Data Fetcher Agent</strong>
+            <p>整合 RWA 審計摘要、Oracle 價格、Vault 借款餘額與 AMM / OTC 流動性快照。</p>
+          </div>
+        </li>
+        <li data-step="parse">
+          <span>2</span>
+          <div>
+            <strong>RAG Document Parser</strong>
+            <p>抽取抵押品評估條款、違約事件、審計分數與文件證據，不補寫缺漏數字。</p>
+          </div>
+        </li>
+        <li data-step="risk">
+          <span>3</span>
+          <div>
+            <strong>Risk Analyst Agent</strong>
+            <p>計算 LTV、Health Factor、Asset Coverage Ratio、Oracle De-peg 與流動性覆蓋。</p>
+          </div>
+        </li>
+        <li data-step="anomaly">
+          <span>4</span>
+          <div>
+            <strong>Anomaly Detector</strong>
+            <p>以規則與 Z-Score 概念偵測閃崩、違約率升高、巨鯨提領與合約風險升溫。</p>
+          </div>
+        </li>
+        <li data-step="verify">
+          <span>5</span>
+          <div>
+            <strong>Audit & Verification Agent</strong>
+            <p>把硬性數值規則與 AI 質化判斷分層，避免幻覺結論混入清算決策。</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="panel score-panel" aria-label="風險評分">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Step 3</p>
+          <h2>即時風險儀表板</h2>
+        </div>
+        <span id="riskBadge" class="risk-badge medium">中度風險</span>
+      </div>
+
+      <div class="risk-meter" aria-label="風險分數">
+        <svg viewBox="0 0 220 132" role="img" aria-labelledby="meterTitle">
+          <title id="meterTitle">RWA 借貸池風險分數</title>
+          <path d="M24 110 A86 86 0 0 1 196 110" class="meter-base"></path>
+          <path id="meterArc" d="M24 110 A86 86 0 0 1 196 110" class="meter-arc"></path>
+          <line id="meterNeedle" x1="110" y1="110" x2="110" y2="34"></line>
+          <circle cx="110" cy="110" r="8"></circle>
+        </svg>
+        <strong id="riskScore">62</strong>
+        <span>Risk Score / 100</span>
+      </div>
+
+      <div class="metric-grid" id="metricGrid"></div>
+    </section>
+
+    <section class="panel flow-panel" aria-label="Agent 決策流程">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Trace</p>
+          <h2>Agent 決策流程</h2>
+        </div>
+      </div>
+      <div id="decisionFlow" class="decision-flow"></div>
+    </section>
+
+    <section class="panel report-panel" aria-label="RWA 風險報告自動生成器">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Step 4</p>
+          <h2>RWA 授信覆審與清算預警報告</h2>
+        </div>
+        <button id="copyReport" type="button">複製報告</button>
+      </div>
+
+      <div id="report" class="report"></div>
+    </section>
+
+    <section class="panel evidence-panel" aria-label="異常偵測與證據">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Alert</p>
+          <h2>預警與異常偵測</h2>
+        </div>
+        <span id="anomalyCount" class="status-pill">0 項異常</span>
+      </div>
+      <div id="anomalyList" class="anomaly-list"></div>
+    </section>
+
+    <section class="panel compare-panel" aria-label="AI 與規則引擎交叉驗證">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">Guardrail</p>
+          <h2>AI vs 人工 / 規則引擎交叉驗證</h2>
+        </div>
+      </div>
+      <div class="comparison-table" role="table" aria-label="AI 與規則引擎對照">
+        <div role="row" class="table-head">
+          <span role="columnheader">項目</span>
+          <span role="columnheader">硬性鏈上規則</span>
+          <span role="columnheader">AI 語意分析</span>
+          <span role="columnheader">幻覺控管</span>
+        </div>
+        <div role="row">
+          <span>LTV / HF</span>
+          <span>由抵押估值、借款餘額與清算門檻直接計算</span>
+          <span>解釋壓力來源與清算情境</span>
+          <span>報告列出公式與輸入數字</span>
+        </div>
+        <div role="row">
+          <span>Oracle De-peg</span>
+          <span>Oracle 價格與評估價格偏離超過門檻即觸發</span>
+          <span>判讀可能原因：流動性不足、餵價延遲或市場事件</span>
+          <span>AI 不得改寫價格，只能描述風險含義</span>
+        </div>
+        <div role="row">
+          <span>違約與審計</span>
+          <span>違約率、審計分數、合約風險由輸入資料驗證</span>
+          <span>摘要法律與審計文件中的質化警訊</span>
+          <span>缺漏文件標示為待補件，不推測結論</span>
+        </div>
+        <div role="row">
+          <span>清算建議</span>
+          <span>只在健康因子低於門檻或流動性不足時升級</span>
+          <span>產出覆審重點與人工決策待辦</span>
+          <span>保留人工覆核與多簽治理權限</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
